@@ -41,30 +41,55 @@ export default function NuovaPasswordPage() {
   const [validSession, setValidSession] = useState(false)
   const [checking, setChecking] = useState(true)
 
-  // Supabase scrive la sessione nell'URL dopo il click sul link email.
-  // Aspettiamo che onAuthStateChange la rilevi.
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search)
-  const code = params.get('code')
-  const type = params.get('type')
+  useEffect(() => {
+    async function handleRecovery() {
+      try {
+        // Caso 1: PKCE flow — ?code=... nei query params
+        const searchParams = new URLSearchParams(window.location.search)
+        const code = searchParams.get('code')
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+          if (!error) {
+            setValidSession(true)
+          }
+          setChecking(false)
+          return
+        }
 
-  if (code) {
-    supabase.auth.exchangeCodeForSession(code)
-      .then(({ error }) => {
-        if (!error) setValidSession(true)
+        // Caso 2: hash flow — #access_token=...&type=recovery
+        const hash = window.location.hash
+        if (hash) {
+          const hashParams = new URLSearchParams(hash.replace('#', ''))
+          const access_token = hashParams.get('access_token')
+          const refresh_token = hashParams.get('refresh_token') || ''
+          const type = hashParams.get('type')
+          if (access_token && type === 'recovery') {
+            const { error } = await supabase.auth.setSession({ access_token, refresh_token })
+            if (!error) {
+              setValidSession(true)
+            }
+            setChecking(false)
+            return
+          }
+        }
+
+        // Caso 3: sessione già attiva
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          setValidSession(true)
+          setChecking(false)
+          return
+        }
+
         setChecking(false)
-      })
-    return
-  }
-
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'PASSWORD_RECOVERY' && session) {
-      setValidSession(true)
+      } catch (err) {
+        console.error(err)
+        setChecking(false)
+      }
     }
-    setChecking(false)
-  })
-  return () => subscription.unsubscribe()
-}, [])
+
+    handleRecovery()
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

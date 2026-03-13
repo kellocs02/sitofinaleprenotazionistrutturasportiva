@@ -125,6 +125,13 @@ export default function RegistrazionePage() {
     return e
   }
 
+    useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('code')
+    if (code) {
+      window.location.href = `/nuova-password?code=${code}`
+    }
+  }, [])
+
   // Revalidate on every change
   useEffect(() => {
     if (Object.keys(touched).length > 0) {
