@@ -2,70 +2,73 @@ import Link from 'next/link'
 
 export default function Home() {
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: '#7ecf4a', fontFamily: "'Nunito', sans-serif" }}>
+    <div className="min-h-screen" style={{ background: '#ffffff', fontFamily: "'Nunito', sans-serif" }}>
 
-      {/* Sfondo campo */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 60px, transparent 60px, transparent 120px)'
-      }} />
-
-      <div className="relative max-w-4xl mx-auto px-7 py-7">
+      <div className="max-w-3xl mx-auto px-8 py-8">
 
         {/* Nav */}
-        <nav className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-2 text-[#1a5c0a] font-black text-xl" style={{ fontFamily: "'Fredoka One', cursive" }}>
-            <span className="w-8 h-8 bg-white rounded-full border-[3px] border-[#1a5c0a] flex items-center justify-center text-base">⚽</span>
+        <nav className="flex justify-between items-center mb-20">
+          <div className="flex items-center gap-2 text-[#1a5c0a] font-black text-lg" style={{ fontFamily: "'Fredoka One', cursive" }}>
+            <span className="text-xl">⚽</span>
             CS Panoramica
           </div>
-          <div className="flex gap-2">
-            <Link href="/login" className="bg-white border-[3px] border-[#1a5c0a] text-[#1a5c0a] px-5 py-2 rounded-full font-extrabold text-sm hover:bg-[#e8ffd4] transition">Accedi</Link>
-            <Link href="/registrazione" className="bg-[#ff7c2a] border-[3px] border-[#c95700] text-white px-5 py-2 rounded-full font-extrabold text-sm shadow-[0_4px_0_#c95700] hover:-translate-y-0.5 transition">Registrati!</Link>
+          <div className="flex gap-3">
+            <Link href="/login" className="text-[#1a5c0a] font-bold text-sm px-5 py-2 rounded-full border-2 border-[#1a5c0a] hover:bg-[#f0fde8] transition">
+              Accedi
+            </Link>
+            <Link href="/registrazione" className="bg-[#1a5c0a] text-white font-bold text-sm px-5 py-2 rounded-full hover:bg-[#258010] transition">
+              Registrati
+            </Link>
           </div>
         </nav>
 
         {/* Hero */}
-        <div className="text-center mb-9">
-          <div className="inline-block bg-white border-[3px] border-[#1a5c0a] rounded-full px-5 py-1.5 text-[#1a5c0a] font-extrabold text-sm mb-5">✨ Prenota online ✨</div>
-          <h1 className="text-[clamp(38px,7vw,70px)] leading-tight text-white mb-2" style={{
-            fontFamily: "'Fredoka One', cursive",
-            textShadow: '3px 4px 0 #1a5c0a, 6px 8px 0 rgba(0,0,0,0.12)'
-          }}>
-            CENTRO SPORTIVO<br /><span className="text-yellow-200">PANORAMICA</span>
-          </h1>
-          <p className="text-[#1a5c0a] font-bold text-lg mb-7">Scegli il campo e gioca subito — facile come un calcio al pallone!</p>
-          <div className="flex gap-4 justify-center">
-            <Link href="/prenotazioni" className="bg-white border-4 border-[#1a5c0a] text-[#1a5c0a] px-9 py-4 rounded-full font-extrabold text-lg shadow-[0_5px_0_#1a5c0a] hover:-translate-y-1 transition">⚽ Prenota ora</Link>
-            <Link href="/campi" className="bg-yellow-200 border-4 border-yellow-400 text-yellow-800 px-9 py-4 rounded-full font-extrabold text-lg shadow-[0_5px_0_#e6c800] hover:-translate-y-1 transition">📅 Scopri i campi</Link>
+        <div className="mb-24">
+          <div className="inline-flex items-center gap-2 bg-[#f0fde8] border border-[#b6e89a] text-[#1a5c0a] text-xs font-bold px-4 py-1.5 rounded-full mb-8 tracking-wide uppercase">
+            <span className="w-1.5 h-1.5 bg-[#4caf28] rounded-full" />
+            Prenota online
           </div>
+          <h1 className="text-[clamp(40px,6vw,64px)] leading-[1.1] font-black text-gray-900 mb-5 tracking-tight" style={{ fontFamily: "'Fredoka One', cursive" }}>
+            Centro Sportivo<br />
+            <span className="text-[#1a5c0a]">Panoramica</span>
+          </h1>
+          <p className="text-gray-500 text-base leading-relaxed max-w-md">
+            Prenota il tuo campo preferito in pochi secondi. Semplice, veloce, da qualsiasi dispositivo.
+          </p>
         </div>
 
-        {/* Striscia campo */}
-        <div className="h-3 mx-[-28px] mb-8 border-t-4 border-b-4 border-dashed border-white/40" style={{ background: '#5bb832' }} />
+        {/* Divider */}
+        <div className="border-t border-gray-100 mb-16" />
 
         {/* Cards */}
-        <div className="grid grid-cols-3 gap-5 mb-8">
+        <div className="grid grid-cols-3 gap-6 mb-16">
           {[
-            { icon: '📅', color: 'bg-blue-100 border-blue-500 text-blue-500', title: 'Prenota Online', desc: 'Scegli data e ora in pochi click, da telefono o computer!' },
-            { icon: '💳', color: 'bg-orange-100 border-orange-400 text-orange-400', title: 'Paga Facile', desc: 'Pagamento online sicuro oppure direttamente alla cassa' },
-            { icon: '📱', color: 'bg-purple-100 border-purple-500 text-purple-500', title: 'Gestisci Tutto', desc: 'Modifica o cancella la tua prenotazione quando vuoi' },
+            { icon: '📅', title: 'Prenota online', desc: 'Scegli data e ora in pochi click, da telefono o computer.' },
+            { icon: '📱', title: 'Gestisci tutto', desc: 'Modifica o cancella la prenotazione quando vuoi.' },
+            { icon: '7/7', title: 'Sempre aperti', desc: 'I nostri campi sono disponibili ogni giorno della settimana.', isText: true },
           ].map((c) => (
-            <div key={c.title} className="bg-white border-4 border-[#1a5c0a] rounded-3xl p-7 text-center shadow-[0_6px_0_#1a5c0a] hover:-translate-y-1 transition">
-              <div className={`w-14 h-14 rounded-full border-4 flex items-center justify-center text-2xl mx-auto mb-4 ${c.color}`}>{c.icon}</div>
-              <h3 className="font-black text-xl text-[#1a5c0a] mb-2" style={{ fontFamily: "'Fredoka One', cursive" }}>{c.title}</h3>
-              <p className="text-sm font-semibold text-[#5a7a4a] leading-relaxed">{c.desc}</p>
+            <div key={c.title} className="p-6 rounded-2xl border border-gray-100 hover:border-[#b6e89a] hover:bg-[#fafffe] transition group">
+              <div className="w-10 h-10 bg-[#f0fde8] rounded-xl flex items-center justify-center text-lg mb-4 group-hover:bg-[#d4f5b0] transition">
+                {c.isText
+                  ? <span className="text-[#1a5c0a] font-black text-xs">7/7</span>
+                  : c.icon}
+              </div>
+              <h3 className="font-black text-gray-900 text-sm mb-1">{c.title}</h3>
+              <p className="text-gray-400 text-xs leading-relaxed">{c.desc}</p>
             </div>
           ))}
         </div>
 
         {/* Stats */}
-        <div className="flex bg-white border-4 border-[#1a5c0a] rounded-2xl overflow-hidden shadow-[0_5px_0_#1a5c0a]">
-          {[['12', 'Campi'], ['2400+', 'Prenotazioni'], ['7/7', 'Giorni aperti']].map(([n, l], i) => (
-            <div key={l} className={`flex-1 text-center py-5 ${i < 2 ? 'border-r-[3px] border-[#e8f5e0]' : ''}`}>
-              <div className="text-[#ff7c2a] text-3xl font-black" style={{ fontFamily: "'Fredoka One', cursive" }}>{n}</div>
-              <div className="text-[#5a7a4a] text-xs font-extrabold uppercase tracking-wide">{l}</div>
+        <div className="grid grid-cols-3 divide-x divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden">
+          {[['12', 'Campi disponibili'], ['2.400+', 'Prenotazioni'], ['7/7', 'Giorni aperti']].map(([n, l]) => (
+            <div key={l} className="text-center py-6">
+              <div className="text-[#1a5c0a] text-2xl font-black mb-0.5" style={{ fontFamily: "'Fredoka One', cursive" }}>{n}</div>
+              <div className="text-gray-400 text-xs font-semibold">{l}</div>
             </div>
           ))}
         </div>
+
       </div>
     </div>
   )
