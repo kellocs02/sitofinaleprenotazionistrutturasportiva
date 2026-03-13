@@ -30,9 +30,11 @@ export async function proxy(request) {
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/proprietario')
 
-  const isAuthRoute =
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/registrazione')
+const isAuthRoute =
+  pathname.startsWith('/login') ||
+  pathname.startsWith('/registrazione') ||
+  pathname.startsWith('/nuova-password') ||
+  pathname.startsWith('/recupera-password')
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
