@@ -17,7 +17,7 @@ export default function RecuperaPasswordPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/nuova-password`,
+        redirectTo: 'https://sitofinaleprenotazionistrutturasportiva-l8lzfs12u.vercel.app/nuova-password',
       })
       if (error) throw error
       setSent(true)
