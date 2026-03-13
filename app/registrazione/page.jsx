@@ -7,11 +7,10 @@ import Link from 'next/link'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-// --- Rate limiting (stesso pattern del login) ---
 const REG_LOCKOUT_KEY = 'reg_lockout'
 const REG_ATTEMPTS_KEY = 'reg_attempts'
 const MAX_REG_ATTEMPTS = 5
-const REG_LOCKOUT_MS = 10 * 60 * 1000 // 10 minuti
+const REG_LOCKOUT_MS = 10 * 60 * 1000
 
 function getRegLockoutState() {
   if (typeof window === 'undefined') return { locked: false, remaining: 0 }
@@ -35,8 +34,7 @@ function formatTimeLeft(ms) {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
-// --- Password strength ---
-const MIN_SCORE = 2 // Minimo "Discreta" per poter inviare
+const MIN_SCORE = 2
 
 function calcScore(p) {
   let s = 0
@@ -72,7 +70,6 @@ function StrengthBar({ password }) {
   )
 }
 
-// --- Popup verifica email ---
 function EmailVerificationPopup({ email, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -104,13 +101,11 @@ function EmailVerificationPopup({ email, onClose }) {
   )
 }
 
-// --- Componente principale ---
 export default function RegistrazionePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showPopup, setShowPopup] = useState(false)
   const [mounted, setMounted] = useState(false)
-
   const [locked, setLocked] = useState(false)
   const [timeLeft, setTimeLeft] = useState(0)
 
@@ -126,7 +121,14 @@ export default function RegistrazionePage() {
     else if (data.nomeCompleto.trim().length < 3) e.nomeCompleto = 'Inserisci nome e cognome'
     if (!data.email) e.email = "L'email è obbligatoria"
     else if (!emailRegex.test(data.email)) e.email = 'Formato email non valido'
-    if (data.telefono && !/^\+?[\d\s\-()]{7,15}$/.test(data.telefono)) e.telefono = 'Numero non valido'
+
+    // ✅ Telefono ora obbligatorio
+    if (!data.telefono) {
+      e.telefono = 'Il telefono è obbligatorio'
+    } else if (!/^\+?[\d\s\-()]{7,15}$/.test(data.telefono)) {
+      e.telefono = 'Numero non valido'
+    }
+
     if (!data.password) e.password = 'La password è obbligatoria'
     else if (data.password.length < 6) e.password = 'Minimo 6 caratteri'
     else if (calcScore(data.password) < MIN_SCORE) e.password = 'Password troppo debole — aggiungi maiuscole o numeri'
@@ -144,7 +146,6 @@ export default function RegistrazionePage() {
     if (code) window.location.href = `/nuova-password?code=${code}`
   }, [])
 
-  // Countdown lockout
   useEffect(() => {
     if (!locked) return
     const interval = setInterval(() => {
@@ -182,16 +183,13 @@ export default function RegistrazionePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     const { locked: isLocked } = getRegLockoutState()
     if (isLocked) return
-
     const allTouched = Object.keys(formData).reduce((acc, k) => ({ ...acc, [k]: true }), {})
     setTouched(allTouched)
     const validationErrors = validate(formData)
     setErrors(validationErrors)
     if (Object.keys(validationErrors).length > 0) return
-
     setLoading(true)
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -202,9 +200,7 @@ export default function RegistrazionePage() {
           emailRedirectTo: `${window.location.origin}/dashboard`
         }
       })
-
       if (signUpError) {
-        // Rate limit da Supabase
         const msg = signUpError.message.toLowerCase()
         if (msg.includes('rate') || msg.includes('too many') || msg.includes('limit')) {
           const until = Date.now() + REG_LOCKOUT_MS
@@ -220,29 +216,22 @@ export default function RegistrazionePage() {
         }
         throw signUpError
       }
-
       if (data?.user && data.user.identities && data.user.identities.length === 0) {
         setErrors((prev) => ({ ...prev, email: 'Esiste già un account con questa email' }))
         setTouched((prev) => ({ ...prev, email: true }))
-        // Conta come tentativo per evitare email enumeration bruteforce
         bumpAttempts()
         return
       }
-
       if (data?.user) {
         await supabase.from('profili').upsert({
           id: data.user.id,
           nome_completo: formData.nomeCompleto,
           telefono: formData.telefono,
-          // ruolo NON viene più inviato dal client — ci pensa il trigger Postgres
         })
       }
-
-      // Successo — reset tentativi
       localStorage.removeItem(REG_ATTEMPTS_KEY)
       localStorage.removeItem(REG_LOCKOUT_KEY)
       setShowPopup(true)
-
     } catch (err) {
       console.error('Errore registrazione:', err)
       bumpAttempts()
@@ -358,13 +347,13 @@ export default function RegistrazionePage() {
                       style={inputStyle(field('email'))} />
                   </Field>
 
-                  <Field label="Telefono (opzionale)" error={field('telefono').error} valid={field('telefono').valid}>
+                  {/* ✅ Label senza "(opzionale)", hint rimosso */}
+                  <Field label="Telefono" error={field('telefono').error} valid={field('telefono').valid}>
                     <input type="tel" name="telefono" value={formData.telefono}
                       onChange={handleChange} onBlur={handleBlur}
                       autoComplete="tel" placeholder="+39 333 123 4567" inputMode="tel"
                       className="w-full px-4 py-3 rounded-lg outline-none text-sm transition-all duration-200"
                       style={inputStyle(field('telefono'))} />
-                    <p className="text-[11px] mt-1" style={{ color: 'rgba(61,26,10,0.3)' }}>Solo numeri, spazi, +, ( ) e -</p>
                   </Field>
 
                   <Field label="Password" error={field('password').error} valid={field('password').valid}>
