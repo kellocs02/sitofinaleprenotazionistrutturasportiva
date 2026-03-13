@@ -306,7 +306,7 @@ export default function LoginPage() {
                 </Link>
               </p>
               <p>
-                <a href="#" className="text-white/30 text-[13px] hover:text-green-400 transition-colors">
+                <a href="/recupera-password" className="text-white/30 text-[13px] hover:text-green-400 transition-colors">
                   Password dimenticata?
                 </a>
               </p>
