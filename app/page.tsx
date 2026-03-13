@@ -8,7 +8,7 @@ export default function Home() {
       <div className="w-1/2 bg-[#8b3a1e] flex flex-col justify-between px-14 py-14">
 
         <div>
-          <p className="text-[#f5d9c8]/40 text-xs uppercase tracking-[0.2em] mb-3">Catania, Sicilia</p>
+          <p className="text-[#f5d9c8]/40 text-xs uppercase tracking-[0.2em] mb-3">Messina, Sicilia</p>
           <h1 className="text-[#f5d9c8] text-4xl font-bold leading-tight">
             Campo Sportivo<br />Panoramica
           </h1>
@@ -16,7 +16,7 @@ export default function Home() {
 
         <div className="border-l-2 border-[#f5d9c8]/20 pl-6">
           <p className="text-[#f5d9c8]/65 text-xl leading-snug italic">
-            "Il campo ti aspetta.<br />Tutto il resto è solo scusa."
+            "Il campo ti aspetta.<br />Tutto il resto è solo una scusa."
           </p>
         </div>
 
