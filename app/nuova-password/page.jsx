@@ -41,28 +41,27 @@ export default function NuovaPasswordPage() {
   const [validSession, setValidSession] = useState(false)
   const [checking, setChecking] = useState(true)
 
-useEffect(() => {
-  async function handleRecovery() {
-    try {
-      const searchParams = new URLSearchParams(window.location.search)
-      const code = searchParams.get('code')
-      const type = searchParams.get('type')
+  useEffect(() => {
+    async function handleRecovery() {
+      try {
+        const searchParams = new URLSearchParams(window.location.search)
+        const code = searchParams.get('code')
+        const type = searchParams.get('type')
 
-      if (code && type === 'recovery') {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-        console.log('exchange result:', data, error)
-        if (!error && data.session) {
-          setValidSession(true)
+        if (code && type === 'recovery') {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+          if (!error && data.session) {
+            setValidSession(true)
+          }
         }
+      } catch (err) {
+        console.error('Recovery error:', err)
+      } finally {
+        setChecking(false)
       }
-    } catch (err) {
-      console.error('Recovery error:', err)
-    } finally {
-      setChecking(false)
     }
-  }
-  handleRecovery()
-}, [])
+    handleRecovery()
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -93,7 +92,6 @@ useEffect(() => {
   return (
     <div className="flex min-h-screen" style={{ fontFamily: "'Georgia', serif" }}>
 
-      {/* LEFT */}
       <div className="w-1/2 bg-[#8b3a1e] hidden lg:flex flex-col justify-between px-14 py-14">
         <div>
           <p className="text-[#f5d9c8]/40 text-xs uppercase tracking-[0.2em] mb-3">Catania, Sicilia</p>
@@ -103,13 +101,12 @@ useEffect(() => {
         </div>
         <div className="border-l-2 border-[#f5d9c8]/20 pl-6">
           <p className="text-[#f5d9c8]/65 text-xl leading-snug italic">
-            "Un nuovo inizio<br />comincia da qui."
+            "Un nuovo inizio comincia da qui."
           </p>
         </div>
         <p className="text-[#f5d9c8]/25 text-xs uppercase tracking-[0.2em]">Est. 2010</p>
       </div>
 
-      {/* RIGHT */}
       <div className="flex-1 bg-[#f2e8d9] flex items-center justify-center px-10 py-14">
         <div className="w-full max-w-sm">
 
@@ -118,17 +115,17 @@ useEffect(() => {
 
           ) : success ? (
             <div className="text-center space-y-4">
-              <div className="text-5xl">✅</div>
+              <div className="text-5xl">OK</div>
               <h2 className="text-2xl font-bold text-[#3d1a0a]">Password aggiornata!</h2>
               <p className="text-[#3d1a0a]/50 text-sm">Verrai reindirizzato al login tra pochi secondi...</p>
             </div>
 
           ) : !validSession ? (
             <div className="text-center space-y-4">
-              <div className="text-5xl">⚠️</div>
+              <div className="text-5xl">!</div>
               <h2 className="text-2xl font-bold text-[#3d1a0a]">Link non valido</h2>
               <p className="text-[#3d1a0a]/50 text-sm leading-relaxed">
-                Il link è scaduto o già utilizzato.<br />Richiedi un nuovo link di recupero.
+                Il link e scaduto o gia utilizzato. Richiedi un nuovo link di recupero.
               </p>
               <Link href="/recupera-password"
                 className="inline-block mt-2 bg-[#8b3a1e] text-[#f2e8d9] font-semibold text-sm px-6 py-3 rounded-lg hover:bg-[#a04522] transition">
@@ -154,8 +151,8 @@ useEffect(() => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    placeholder="••••••••"
-                    className="w-full bg-white border border-[#8b3a1e]/15 rounded-lg px-4 py-3 text-[#3d1a0a] text-sm placeholder:text-[#3d1a0a]/25 outline-none focus:border-[#8b3a1e] transition"
+                    placeholder="password"
+                    className="w-full bg-white border border-[#8b3a1e]/15 rounded-lg px-4 py-3 text-[#3d1a0a] text-sm outline-none focus:border-[#8b3a1e] transition"
                   />
                   <StrengthBar password={password} />
                 </div>
@@ -169,20 +166,20 @@ useEffect(() => {
                     value={conferma}
                     onChange={(e) => setConferma(e.target.value)}
                     required
-                    placeholder="••••••••"
-                    className="w-full bg-white border border-[#8b3a1e]/15 rounded-lg px-4 py-3 text-[#3d1a0a] text-sm placeholder:text-[#3d1a0a]/25 outline-none focus:border-[#8b3a1e] transition"
+                    placeholder="conferma password"
+                    className="w-full bg-white border border-[#8b3a1e]/15 rounded-lg px-4 py-3 text-[#3d1a0a] text-sm outline-none focus:border-[#8b3a1e] transition"
                   />
                   {conferma && password !== conferma && (
-                    <p className="text-xs text-red-500 mt-1">⚠ Le password non coincidono</p>
+                    <p className="text-xs text-red-500 mt-1">Le password non coincidono</p>
                   )}
                   {conferma && password === conferma && (
-                    <p className="text-xs text-green-600 mt-1">✓ Le password coincidono</p>
+                    <p className="text-xs text-green-600 mt-1">Le password coincidono</p>
                   )}
                 </div>
 
                 {error && (
                   <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                    ⚠️ {error}
+                    {error}
                   </div>
                 )}
 
