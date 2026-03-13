@@ -43,15 +43,33 @@ export default function NuovaPasswordPage() {
 
   // Supabase scrive la sessione nell'URL dopo il click sul link email.
   // Aspettiamo che onAuthStateChange la rilevi.
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY' && session) {
-        setValidSession(true)
-      }
-      setChecking(false)
-    })
-    return () => subscription.unsubscribe()
-  }, [])
+    useEffect(() => {
+  const hash = window.location.hash
+  if (hash) {
+    const params = new URLSearchParams(hash.replace('#', ''))
+    const access_token = params.get('access_token')
+    const refresh_token = params.get('refresh_token')
+    const type = params.get('type')
+
+    if (access_token && type === 'recovery') {
+      supabase.auth.setSession({ access_token, refresh_token: refresh_token || '' })
+        .then(({ error }) => {
+          if (!error) setValidSession(true)
+          setChecking(false)
+        })
+      return
+    }
+  }
+
+  // Fallback: ascolta onAuthStateChange
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY' && session) {
+      setValidSession(true)
+    }
+    setChecking(false)
+  })
+  return () => subscription.unsubscribe()
+}, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
