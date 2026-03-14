@@ -33,7 +33,7 @@ function Countdown({ expiresAt, onExpired }) {
   const urgente = timeLeft.diff < 60 * 60 * 1000
   const color = urgente ? '#ef4444' : timeLeft.diff < 2 * 60 * 60 * 1000 ? '#f59e0b' : '#6b7c74'
   return (
-    <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:10, fontWeight:700, color, fontFamily:"'DM Mono', monospace" }}>
+    <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:10, fontWeight:700, color }}>
       <span style={{ width:5, height:5, borderRadius:'50%', background: urgente ? '#ef4444' : '#f59e0b', animation: urgente ? 'pulse 1s infinite' : 'none' }} />
       {String(timeLeft.h).padStart(2,'0')}:{String(timeLeft.m).padStart(2,'0')}:{String(timeLeft.s).padStart(2,'0')}
     </span>
@@ -50,11 +50,9 @@ export default function RicercaGiocatori() {
   const [conferma, setConferma] = useState(false)
   const [erroreForm, setErroreForm] = useState('')
   const [numGiocatori, setNumGiocatori] = useState(null)
-  const [sport, setSport] = useState(null)
   const [orario, setOrario] = useState('')
   const [dataPartita, setDataPartita] = useState('')
   const [confermaElimina, setConfermaElimina] = useState(null)
-  const [filtroSport, setFiltroSport] = useState('Tutti')
 
   useEffect(() => {
     const init = async () => {
@@ -75,6 +73,7 @@ export default function RicercaGiocatori() {
     const { data, error } = await supabase
       .from('posts')
       .select(`*, profili ( nome_completo, avatar_url ), partecipanti ( id, utente_id, profili ( nome_completo, avatar_url ) )`)
+      .eq('sport', 'Calcio')
       .gt('expires_at', now)
       .order('created_at', { ascending: false })
     if (error) { console.log(error); return }
@@ -82,13 +81,20 @@ export default function RicercaGiocatori() {
   }
 
   const pubblicaPost = async () => {
-    if (!numGiocatori || !sport || !orario || !dataPartita) { setErroreForm('Compila tutti i campi prima di pubblicare.'); return }
+    if (!numGiocatori || !orario || !dataPartita) { setErroreForm('Compila tutti i campi prima di pubblicare.'); return }
     setErroreForm('')
     const { data: { session } } = await supabase.auth.getSession()
     const expiresAt = new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString()
-    const { error } = await supabase.from('posts').insert({ utente_id: session?.user?.id, numero_giocatori: numGiocatori, sport, orario, data_partita: dataPartita, expires_at: expiresAt })
+    const { error } = await supabase.from('posts').insert({
+      utente_id: session?.user?.id,
+      numero_giocatori: numGiocatori,
+      sport: 'Calcio',
+      orario,
+      data_partita: dataPartita,
+      expires_at: expiresAt,
+    })
     if (error) { console.log(error); return }
-    setNumGiocatori(null); setSport(null); setOrario(''); setDataPartita('')
+    setNumGiocatori(null); setOrario(''); setDataPartita('')
     setMostraModale(false); setConferma(true)
     setTimeout(() => setConferma(false), 3000)
     await caricaPosts()
@@ -123,16 +129,13 @@ export default function RicercaGiocatori() {
     const fs = size === 'sm' ? 10 : size === 'lg' ? 17 : 13
     if (profilo?.avatar_url) return <img src={profilo.avatar_url} alt="" style={{ width:sz, height:sz, borderRadius:'50%', objectFit:'cover', border:'2px solid #fff', flexShrink:0 }} />
     return (
-      <div style={{ width:sz, height:sz, borderRadius:'50%', background:'#0a1f13', border:'2px solid #fff', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontFamily:"'Bebas Neue', sans-serif", fontSize:fs, color:'#fff', letterSpacing:1 }}>
+      <div style={{ width:sz, height:sz, borderRadius:'50%', background:'#0a1f13', border:'2px solid #fff', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontFamily:"'Bebas Neue',sans-serif", fontSize:fs, color:'#fff', letterSpacing:1 }}>
         {getInitials(profilo?.nome_completo)}
       </div>
     )
   }
 
-  const sportEmoji = { 'Calcio':'⚽', 'Padel':'🎾', 'Basket':'🏀', 'Volley':'🏐' }
-  const sportList = ['Tutti','Calcio','Padel','Basket','Volley']
   const orariDisponibili = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00']
-  const postsFiltrati = filtroSport === 'Tutti' ? posts : posts.filter(p => p.sport === filtroSport)
 
   if (loading) return (
     <>
@@ -167,7 +170,6 @@ export default function RicercaGiocatori() {
         {/* ── SIDEBAR ── */}
         <aside style={{ width:272, minWidth:272, background:'#0a1f13', display:'flex', flexDirection:'column', position:'sticky', top:0, height:'100vh', overflowY:'auto' }}>
 
-          {/* Brand */}
           <div style={{ padding:'28px 24px 20px', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:28 }}>
               <div style={{ width:34, height:34, background:'#2d6e45', borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -180,7 +182,6 @@ export default function RicercaGiocatori() {
               <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:21, letterSpacing:3, color:'#fff' }}>CAMPO<span style={{ color:'#4caf72' }}>+</span></span>
             </div>
 
-            {/* Profilo */}
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', gap:8 }}>
               <div style={{ width:60, height:60, borderRadius:'50%', background:'#152e1e', border:'2px solid #2d6e45', display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
@@ -193,7 +194,7 @@ export default function RicercaGiocatori() {
               </div>
               <div>
                 <div style={{ fontSize:13, fontWeight:600, color:'#fff' }}>{profilo?.nome_completo || 'Utente'}</div>
-                <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', marginTop:2, wordBreak:'break-all' }}>{profilo?.email}</div>
+                <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', marginTop:2 }}>{profilo?.email}</div>
               </div>
               <div style={{ background:'#2d6e45', color:'#a8dbb8', fontSize:9, fontWeight:700, letterSpacing:1.5, textTransform:'uppercase', padding:'3px 10px', borderRadius:20 }}>
                 {profilo?.ruolo || 'giocatore'}
@@ -224,24 +225,28 @@ export default function RicercaGiocatori() {
               Cerca Giocatori
             </button>
 
-            {/* Filtri sport nella sidebar */}
-            <div style={{ marginTop:20 }}>
-              <div style={{ fontSize:10, fontWeight:700, letterSpacing:2, textTransform:'uppercase', color:'rgba(255,255,255,0.2)', padding:'0 10px', marginBottom:8 }}>Filtra per sport</div>
-              {sportList.map(s => (
-                <button key={s} onClick={() => setFiltroSport(s)}
-                  style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:8, fontSize:13, fontWeight: filtroSport===s ? 600 : 400, color: filtroSport===s ? '#fff' : 'rgba(255,255,255,0.4)', background: filtroSport===s ? 'rgba(255,255,255,0.1)' : 'transparent', border:'none', cursor:'pointer', transition:'all 0.13s', textAlign:'left' }}
-                  onMouseEnter={e => { if (filtroSport!==s) e.currentTarget.style.background='rgba(255,255,255,0.05)' }}
-                  onMouseLeave={e => { if (filtroSport!==s) e.currentTarget.style.background='transparent' }}>
-                  <span>{s === 'Tutti' ? '🏃 Tutti' : `${sportEmoji[s]} ${s}`}</span>
-                  <span style={{ fontSize:10, background:'rgba(255,255,255,0.1)', padding:'2px 7px', borderRadius:10, color:'rgba(255,255,255,0.35)' }}>
-                    {s === 'Tutti' ? posts.length : posts.filter(p => p.sport === s).length}
-                  </span>
-                </button>
-              ))}
+            {/* Info calcio */}
+            <div style={{ marginTop:24, padding:'16px', background:'rgba(255,255,255,0.04)', borderRadius:12, border:'1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ fontSize:28, textAlign:'center', marginBottom:8 }}>⚽</div>
+              <p style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.7)', textAlign:'center', letterSpacing:1, textTransform:'uppercase' }}>Solo Calcio</p>
+              <p style={{ fontSize:11, color:'rgba(255,255,255,0.3)', textAlign:'center', marginTop:4, lineHeight:1.5 }}>Trova giocatori per la tua partita di calcio</p>
+              <div style={{ marginTop:14, display:'flex', flexDirection:'column', gap:8 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
+                  <span style={{ color:'rgba(255,255,255,0.35)' }}>Partite attive</span>
+                  <span style={{ color:'#fff', fontWeight:700 }}>{posts.length}</span>
+                </div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
+                  <span style={{ color:'rgba(255,255,255,0.35)' }}>Giocatori cercati</span>
+                  <span style={{ color:'#fff', fontWeight:700 }}>{posts.reduce((a,p) => a + p.numero_giocatori, 0)}</span>
+                </div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
+                  <span style={{ color:'rgba(255,255,255,0.35)' }}>Iscritti totali</span>
+                  <span style={{ color:'#fff', fontWeight:700 }}>{posts.reduce((a,p) => a + (p.partecipanti?.length ?? 0), 0)}</span>
+                </div>
+              </div>
             </div>
           </nav>
 
-          {/* Bottom */}
           <div style={{ padding:14, borderTop:'1px solid rgba(255,255,255,0.07)' }}>
             <button onClick={() => { setMostraModale(true); setErroreForm('') }}
               style={{ width:'100%', background:'#2d6e45', border:'none', color:'#fff', padding:'11px 14px', borderRadius:10, fontFamily:"'Bebas Neue',sans-serif", fontSize:16, letterSpacing:2, cursor:'pointer', transition:'all 0.18s' }}
@@ -258,11 +263,10 @@ export default function RicercaGiocatori() {
           {/* Topbar */}
           <header style={{ background:'#fff', borderBottom:'1px solid #e0e8e3', padding:'0 32px', height:60, display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:40 }}>
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, letterSpacing:3, color:'#0a1f13' }}>
-                {filtroSport === 'Tutti' ? 'TUTTE LE PARTITE' : `${sportEmoji[filtroSport]} ${filtroSport.toUpperCase()}`}
-              </span>
+              <span style={{ fontSize:18 }}>⚽</span>
+              <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, letterSpacing:3, color:'#0a1f13' }}>PARTITE DI CALCIO</span>
               <span style={{ background:'#eef3f0', color:'#2d6e45', fontSize:10, fontWeight:700, padding:'3px 10px', borderRadius:20, border:'1px solid #c8e0d0', letterSpacing:1 }}>
-                {postsFiltrati.length} ATTIVE
+                {posts.length} ATTIVE
               </span>
             </div>
             <div style={{ fontSize:12, color:'#6b7c74' }}>
@@ -273,16 +277,31 @@ export default function RicercaGiocatori() {
           {/* Hero strip */}
           <div style={{ background:'#0a1f13', padding:'28px 32px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'relative', overflow:'hidden' }}>
             <div style={{ position:'absolute', inset:0, backgroundImage:'repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,255,255,0.015) 60px,rgba(255,255,255,0.015) 61px),repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(255,255,255,0.015) 60px,rgba(255,255,255,0.015) 61px)' }} />
-            <div style={{ position:'relative', zIndex:1 }}>
-              <p style={{ fontSize:10, fontWeight:700, letterSpacing:3, textTransform:'uppercase', color:'rgba(255,255,255,0.3)', marginBottom:6 }}>⚡ Community sportiva</p>
-              <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'clamp(28px,4vw,44px)', letterSpacing:3, color:'#fff', lineHeight:1 }}>Trova Giocatori</h1>
-              <p style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:5 }}>Pubblica la tua partita e trova chi manca.</p>
+            {/* Campo SVG decorativo */}
+            <div style={{ position:'absolute', right:200, top:'50%', transform:'translateY(-50%)', opacity:0.04 }}>
+              <svg width="180" height="120" viewBox="0 0 400 280" fill="none">
+                <rect x="2" y="2" width="396" height="276" stroke="#fff" strokeWidth="3"/>
+                <line x1="200" y1="2" x2="200" y2="278" stroke="#fff" strokeWidth="2"/>
+                <circle cx="200" cy="140" r="40" stroke="#fff" strokeWidth="2"/>
+                <circle cx="200" cy="140" r="3" fill="#fff"/>
+                <rect x="2" y="75" width="70" height="130" stroke="#fff" strokeWidth="2"/>
+                <rect x="328" y="75" width="70" height="130" stroke="#fff" strokeWidth="2"/>
+              </svg>
             </div>
-            <div style={{ position:'relative', zIndex:1, display:'flex', gap:20, flexShrink:0 }}>
-              {[{ label:'Partite attive', value: posts.length }, { label:'Giocatori cercati', value: posts.reduce((a,p) => a + p.numero_giocatori, 0) }].map(s => (
+            <div style={{ position:'relative', zIndex:1 }}>
+              <p style={{ fontSize:10, fontWeight:700, letterSpacing:3, textTransform:'uppercase', color:'rgba(255,255,255,0.3)', marginBottom:6 }}>⚽ Community calcio</p>
+              <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'clamp(28px,4vw,44px)', letterSpacing:3, color:'#fff', lineHeight:1 }}>Trova Giocatori</h1>
+              <p style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:5 }}>Pubblica la tua partita e completa la squadra.</p>
+            </div>
+            <div style={{ position:'relative', zIndex:1, display:'flex', gap:24, flexShrink:0 }}>
+              {[
+                { label:'Partite attive', value: posts.length },
+                { label:'Giocatori cercati', value: posts.reduce((a,p) => a + p.numero_giocatori, 0) },
+                { label:'Già iscritti', value: posts.reduce((a,p) => a + (p.partecipanti?.length ?? 0), 0) },
+              ].map(s => (
                 <div key={s.label} style={{ textAlign:'center' }}>
                   <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:32, color:'#fff', letterSpacing:1, lineHeight:1 }}>{s.value}</div>
-                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', letterSpacing:1, textTransform:'uppercase', marginTop:3 }}>{s.label}</div>
+                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', letterSpacing:1, textTransform:'uppercase', marginTop:3 }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -290,10 +309,10 @@ export default function RicercaGiocatori() {
 
           {/* Feed */}
           <main style={{ padding:'28px 32px 60px', flex:1, overflowY:'auto' }}>
-            {postsFiltrati.length === 0 ? (
+            {posts.length === 0 ? (
               <div style={{ textAlign:'center', padding:'80px 0' }}>
-                <div style={{ fontSize:48, marginBottom:14 }}>📭</div>
-                <p style={{ fontWeight:700, color:'#0a1f13', fontSize:16 }}>Nessuna partita{filtroSport !== 'Tutti' ? ` di ${filtroSport}` : ''}</p>
+                <div style={{ fontSize:52, marginBottom:14 }}>⚽</div>
+                <p style={{ fontWeight:700, color:'#0a1f13', fontSize:16 }}>Nessuna partita di calcio</p>
                 <p style={{ color:'#6b7c74', fontSize:13, marginTop:4 }}>Sii il primo a cercare giocatori!</p>
                 <button onClick={() => { setMostraModale(true); setErroreForm('') }}
                   style={{ marginTop:18, background:'#0a1f13', color:'#fff', border:'none', padding:'11px 22px', borderRadius:10, fontWeight:700, fontSize:13, cursor:'pointer', letterSpacing:0.3 }}>
@@ -302,26 +321,25 @@ export default function RicercaGiocatori() {
               </div>
             ) : (
               <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-                {postsFiltrati.map(p => {
+                {posts.map(p => {
                   const partecipanti = p.partecipanti ?? []
                   const giaPartecipo = partecipanti.some(pt => pt.utente_id === userId)
                   const numPartecipanti = partecipanti.length
                   const completo = numPartecipanti >= p.numero_giocatori
                   const eMioPost = userId === p.utente_id
                   const progresso = Math.min((numPartecipanti / p.numero_giocatori) * 100, 100)
-                  const emoji = sportEmoji[p.sport] ?? '🏃'
 
                   return (
                     <div key={p.id} style={{ background:'#fff', borderRadius:18, border:'1px solid #e0e8e3', overflow:'hidden', transition:'all 0.2s', animation:'slideUp 0.3s ease' }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor='#0a1f13'; e.currentTarget.style.boxShadow='0 6px 24px rgba(10,31,19,0.07)'; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor='#e0e8e3'; e.currentTarget.style.boxShadow='none'; }}>
 
-                      {/* Card top: sport banner */}
+                      {/* Banner top */}
                       <div style={{ background: completo ? '#fef2f2' : '#eef3f0', borderBottom:'1px solid', borderColor: completo ? '#fecaca' : '#c8e0d0', padding:'10px 18px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                          <span style={{ fontSize:18 }}>{emoji}</span>
-                          <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:15, letterSpacing:2, color: completo ? '#ef4444' : '#0a1f13' }}>{p.sport}</span>
-                          {completo && <span style={{ fontSize:10, fontWeight:700, color:'#ef4444', background:'#fee2e2', padding:'2px 8px', borderRadius:10, border:'1px solid #fecaca', letterSpacing:0.5 }}>COMPLETO</span>}
+                          <span style={{ fontSize:16 }}>⚽</span>
+                          <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, letterSpacing:2, color: completo ? '#ef4444' : '#0a1f13' }}>CALCIO</span>
+                          {completo && <span style={{ fontSize:10, fontWeight:700, color:'#ef4444', background:'#fee2e2', padding:'2px 8px', borderRadius:10, border:'1px solid #fecaca' }}>COMPLETO</span>}
                         </div>
                         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                           {p.expires_at && <Countdown expiresAt={p.expires_at} onExpired={() => setPosts(prev => prev.filter(x => x.id !== p.id))} />}
@@ -337,7 +355,6 @@ export default function RicercaGiocatori() {
                       </div>
 
                       <div style={{ padding:'16px 18px' }}>
-                        {/* Main info */}
                         <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:14 }}>
                           <div style={{ flex:1 }}>
                             <p style={{ fontWeight:800, color:'#0a1f13', fontSize:17, lineHeight:1.3 }}>
@@ -352,10 +369,9 @@ export default function RicercaGiocatori() {
                               </span>
                             </div>
                           </div>
-                          {/* Autore */}
                           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, flexShrink:0 }}>
                             <AvatarComp profilo={p.profili} size="lg" />
-                            <span style={{ fontSize:10, color:'#6b7c74', fontWeight:600, textAlign:'center', maxWidth:70, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                            <span style={{ fontSize:10, color:'#6b7c74', fontWeight:600, maxWidth:70, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                               {p.profili?.nome_completo?.split(' ')[0]}
                             </span>
                           </div>
@@ -372,7 +388,7 @@ export default function RicercaGiocatori() {
                           </div>
                         </div>
 
-                        {/* Partecipanti avatars */}
+                        {/* Avatars partecipanti */}
                         {partecipanti.length > 0 && (
                           <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:14, flexWrap:'wrap' }}>
                             <div style={{ display:'flex' }}>
@@ -394,7 +410,6 @@ export default function RicercaGiocatori() {
                           </div>
                         )}
 
-                        {/* CTA */}
                         {!eMioPost && (
                           <button onClick={() => toggleCiSono(p)} disabled={completo && !giaPartecipo}
                             style={{ width:'100%', padding:'11px', borderRadius:10, fontWeight:700, fontSize:13, border:'none', cursor:(completo && !giaPartecipo) ? 'not-allowed' : 'pointer', transition:'all 0.18s', letterSpacing:0.3,
@@ -416,22 +431,24 @@ export default function RicercaGiocatori() {
         </div>
       </div>
 
-      {/* ── MODALE NUOVA PARTITA ── */}
+      {/* ── MODALE ── */}
       {mostraModale && (
         <div style={{ position:'fixed', inset:0, background:'rgba(10,31,19,0.65)', backdropFilter:'blur(7px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50, padding:16, animation:'fadeIn 0.2s ease' }}
           onClick={() => setMostraModale(false)}>
-          <div style={{ background:'#fff', borderRadius:22, width:'100%', maxWidth:460, overflow:'hidden', animation:'popIn 0.25s ease', boxShadow:'0 24px 70px rgba(10,31,19,0.22)' }}
+          <div style={{ background:'#fff', borderRadius:22, width:'100%', maxWidth:440, overflow:'hidden', animation:'popIn 0.25s ease', boxShadow:'0 24px 70px rgba(10,31,19,0.22)' }}
             onClick={e => e.stopPropagation()}>
 
-            {/* Header modale */}
             <div style={{ background:'#0a1f13', padding:'24px 26px 20px', position:'relative', overflow:'hidden' }}>
               <div style={{ position:'absolute', right:-20, top:-20, width:120, height:120, borderRadius:'50%', background:'rgba(255,255,255,0.03)' }} />
               <div style={{ position:'absolute', right:20, bottom:-30, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.03)' }} />
               <div style={{ position:'relative', zIndex:1, display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
                 <div>
-                  <p style={{ fontSize:10, fontWeight:700, letterSpacing:3, textTransform:'uppercase', color:'rgba(255,255,255,0.3)', marginBottom:5 }}>Nuova partita</p>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5 }}>
+                    <span style={{ fontSize:20 }}>⚽</span>
+                    <p style={{ fontSize:10, fontWeight:700, letterSpacing:3, textTransform:'uppercase', color:'rgba(255,255,255,0.4)' }}>Partita di calcio</p>
+                  </div>
                   <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", color:'#fff', fontSize:32, letterSpacing:3, lineHeight:1 }}>Cerca Giocatori</h2>
-                  <p style={{ color:'rgba(255,255,255,0.35)', fontSize:12, marginTop:5 }}>Compila i dettagli · Scade in 5 ore</p>
+                  <p style={{ color:'rgba(255,255,255,0.35)', fontSize:12, marginTop:5 }}>Il post scade automaticamente in 5 ore</p>
                 </div>
                 <button onClick={() => setMostraModale(false)}
                   style={{ width:32, height:32, background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, color:'rgba(255,255,255,0.6)', fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.15s' }}
@@ -442,7 +459,6 @@ export default function RicercaGiocatori() {
 
             <div style={{ padding:'22px 26px', display:'flex', flexDirection:'column', gap:18 }}>
 
-              {/* Num giocatori */}
               <div>
                 <p style={{ fontSize:10, fontWeight:700, color:'#6b7c74', letterSpacing:2, textTransform:'uppercase', marginBottom:10 }}>Quanti giocatori cerchi?</p>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
@@ -455,20 +471,6 @@ export default function RicercaGiocatori() {
                 </div>
               </div>
 
-              {/* Sport */}
-              <div>
-                <p style={{ fontSize:10, fontWeight:700, color:'#6b7c74', letterSpacing:2, textTransform:'uppercase', marginBottom:10 }}>Che sport?</p>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                  {[{ label:'⚽ Calcio', value:'Calcio' },{ label:'🎾 Padel', value:'Padel' },{ label:'🏀 Basket', value:'Basket' },{ label:'🏐 Volley', value:'Volley' }].map(s => (
-                    <button key={s.value} onClick={() => setSport(s.value)}
-                      style={{ padding:'12px', borderRadius:11, fontWeight:700, fontSize:13, border:'1.5px solid', cursor:'pointer', transition:'all 0.13s', background: sport===s.value ? '#0a1f13' : '#f7f8f6', color: sport===s.value ? '#fff' : '#4a5e52', borderColor: sport===s.value ? '#0a1f13' : '#e0e8e3' }}>
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Data + Orario affiancati */}
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                 <div>
                   <p style={{ fontSize:10, fontWeight:700, color:'#6b7c74', letterSpacing:2, textTransform:'uppercase', marginBottom:8 }}>Giorno</p>
@@ -502,11 +504,11 @@ export default function RicercaGiocatori() {
                   onMouseLeave={e => e.currentTarget.style.background='#f7f8f6'}>
                   Annulla
                 </button>
-                <button onClick={pubblicaPost} disabled={!numGiocatori || !sport || !orario || !dataPartita}
-                  style={{ flex:2, padding:'13px', borderRadius:11, background:'#0a1f13', border:'none', color:'#fff', fontWeight:700, fontSize:13, cursor:(!numGiocatori || !sport || !orario || !dataPartita) ? 'not-allowed' : 'pointer', transition:'all 0.15s', opacity:(!numGiocatori || !sport || !orario || !dataPartita) ? 0.35 : 1, letterSpacing:0.3 }}
-                  onMouseEnter={e => { if (numGiocatori && sport && orario && dataPartita) e.currentTarget.style.background='#2d6e45' }}
+                <button onClick={pubblicaPost} disabled={!numGiocatori || !orario || !dataPartita}
+                  style={{ flex:2, padding:'13px', borderRadius:11, background:'#0a1f13', border:'none', color:'#fff', fontWeight:700, fontSize:13, cursor:(!numGiocatori || !orario || !dataPartita) ? 'not-allowed' : 'pointer', transition:'all 0.15s', opacity:(!numGiocatori || !orario || !dataPartita) ? 0.35 : 1, letterSpacing:0.3 }}
+                  onMouseEnter={e => { if (numGiocatori && orario && dataPartita) e.currentTarget.style.background='#2d6e45' }}
                   onMouseLeave={e => e.currentTarget.style.background='#0a1f13'}>
-                  ✓ Pubblica Partita
+                  ⚽ Pubblica Partita
                 </button>
               </div>
             </div>
@@ -526,7 +528,7 @@ export default function RicercaGiocatori() {
             </div>
             <div style={{ padding:'18px 22px', textAlign:'center' }}>
               <p style={{ color:'#6b7c74', fontSize:13, lineHeight:1.7 }}>
-                Sei sicuro di voler eliminare questo post?<br />
+                Sei sicuro di voler eliminare questa partita?<br />
                 <span style={{ color:'#c8d4ce' }}>L'operazione non può essere annullata.</span>
               </p>
             </div>
@@ -548,8 +550,8 @@ export default function RicercaGiocatori() {
 
       {/* ── TOAST ── */}
       {conferma && (
-        <div style={{ position:'fixed', bottom:24, right:24, background:'#0a1f13', color:'#fff', fontWeight:700, fontSize:13, padding:'13px 18px', borderRadius:13, boxShadow:'0 8px 32px rgba(10,31,19,0.25)', zIndex:50, display:'flex', alignItems:'center', gap:8, animation:'toastIn 0.3s ease', letterSpacing:0.3 }}>
-          ✅ Partita pubblicata con successo!
+        <div style={{ position:'fixed', bottom:24, right:24, background:'#0a1f13', color:'#fff', fontWeight:700, fontSize:13, padding:'13px 18px', borderRadius:13, boxShadow:'0 8px 32px rgba(10,31,19,0.25)', zIndex:50, display:'flex', alignItems:'center', gap:8, animation:'toastIn 0.3s ease' }}>
+          ⚽ Partita pubblicata con successo!
         </div>
       )}
     </>
