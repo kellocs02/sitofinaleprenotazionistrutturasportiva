@@ -194,7 +194,7 @@ export default function RegistrazionePage() {
         password: formData.password,
         options: {
           data: { nome_completo: formData.nomeCompleto },
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       })
       if (signUpError) {

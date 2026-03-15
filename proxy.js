@@ -34,7 +34,8 @@ const isAuthRoute =
   pathname.startsWith('/login') ||
   pathname.startsWith('/registrazione') ||
   pathname.startsWith('/nuova-password') ||
-  pathname.startsWith('/recupera-password')
+  pathname.startsWith('/recupera-password') ||
+  pathname.startsWith('/auth/callback') 
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
