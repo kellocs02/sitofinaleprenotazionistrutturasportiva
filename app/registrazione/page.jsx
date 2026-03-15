@@ -10,7 +10,7 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const REG_LOCKOUT_KEY = 'reg_lockout'
 const REG_ATTEMPTS_KEY = 'reg_attempts'
 const MAX_REG_ATTEMPTS = 999
-const REG_LOCKOUT_MS = 10 * 60 * 1000
+const REG_LOCKOUT_MS = 10 * 60 * 10
 
 function getRegLockoutState() {
   if (typeof window === 'undefined') return { locked: false, remaining: 0 }
